@@ -1,4 +1,4 @@
-# TÍTULO DO PROJETO
+# Análise da Variabilidade Regional do Mercado Automotivo Brasileiro via RENAVAM
 
 `CURSO: Sistemas de Informação`
 
@@ -6,20 +6,20 @@
 
 `SEMESTRE: 7º`
 
-Descrever resumidamente, em um ou dois parágrafos, o projeto que está sendo desenvolvido.
+Este projeto surge no contexto da disciplina de Projeto: Pesquisa e Experimentação em Sistemas de Informação (7º Período). A investigação foca na análise do **Registro Nacional de Veículos Automotores (RENAVAM)** para demonstrar como o mercado automotivo brasileiro é moldado por fatores regionais. O objetivo é utilizar Ciência de Dados e Aprendizado de Máquina para mapear como clima, cultura local, infraestrutura e perfil socioeconômico influenciam a frota de cada município. O público-alvo compreende gestores do setor automotivo, planejadores urbanos e analistas de mercado que buscam transformar dados públicos em decisões estratégicas.
 
 ## Integrantes
 
-* Nome completo do aluno 1
-* Nome completo do aluno 2
-* Nome completo do aluno 3
-* Nome completo do aluno 4
-* Nome completo do aluno 5
-* Nome completo do aluno 6
+* André Ramos
+* Gustavo Gino Pereira
+* Isabella Carolina de Almeida Siqueira Damião
+* Natã Gabriel Teixeira
+* Rhafael Hector de Siqueira Damião
+* Thiago Ferreira de Oliveira
 
 ## Orientador
 
-* Nome completo do professor 1
+* Neil Paiva Tizzo
 
 # Planejamento
 
