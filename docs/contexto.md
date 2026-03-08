@@ -114,10 +114,10 @@ Abaixo, os principais atributos que serão integrados para a análise e modelage
 ![Canvas Analítico](./img/canvas-analitico.png)
 
 ## 10. Vídeo de Apresentação
-[Link para o vídeo] - 
+[Vídeo de apresentação](https://drive.google.com/file/d/17RO2Y3i-K2n34B2k4yOEK4Fe7Iksg05c/view?usp=sharing)
 
 ## 11. Referências
-* BRASIL. Ministério dos Transportes. **Dados Abertos SENATRAN**. Disponível em: [link]. Acesso em: 07 mar. 2026.
+* BRASIL. Ministério dos Transportes. **Dados Abertos SENATRAN**. Disponível em: [[link](https://www.gov.br/transportes/pt-br/assuntos/transito/conteudo-Senatran/estatisticas-frota-de-veiculos-senatran)]. Acesso em: 07 mar. 2026.
 * *Adicionar demais referências*
 
 ---
