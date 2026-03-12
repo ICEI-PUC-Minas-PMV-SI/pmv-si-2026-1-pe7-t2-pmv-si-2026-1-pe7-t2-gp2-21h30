@@ -11,6 +11,7 @@ Este projeto surge no contexto da disciplina de Projeto: Pesquisa e Experimenta�
 ## Integrantes
 
 * André Ramos
+* Gilberto modesto
 * Gustavo Gino Pereira
 * Isabella Carolina de Almeida Siqueira Damião
 * Natã Gabriel Teixeira
