@@ -123,7 +123,7 @@ A transição de um projeto de dados para o ambiente acadêmico exige rigor éti
 
 ## 9. Canvas Analítico
 
-![Canvas Analítico](./img/canvas-analitico.png)
+![Canvas Analítico](./img/Canvas_Analitico(remodelado).png)
 
 ## 10. Vídeo de Apresentação
 [Vídeo de apresentação](https://drive.google.com/file/d/17RO2Y3i-K2n34B2k4yOEK4Fe7Iksg05c/view?usp=sharing)
