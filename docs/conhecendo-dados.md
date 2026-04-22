@@ -1,74 +1,102 @@
-# Conhecendo os dados
+# Projeto de Análise e Modelagem de Frota Veicular Brasileira (Etapa 2)
 
-A base de dados analisada foi composta a partir da junção de arquivos no formato JSON contendo informações relacionadas à distribuição de veículos por estado (UF), incluindo categorias como automóveis e motocicletas. Após o carregamento, foi realizado o tratamento inicial dos dados, incluindo o preenchimento de valores ausentes, garantindo maior consistência para análise.
+Este repositório contém a análise descritiva e exploratória dos dados unificados para a predição de demanda por veículos utilitários e motorização diesel nos municípios brasileiros.
 
-A base apresenta variáveis categóricas, como UF, município e tipo de veículo, e variáveis numéricas relacionadas à quantidade de veículos. 
+## 📊 Conhecendo os Dados
 
-##  Medidas de Tendência Central
+Nesta seção, realizamos uma investigação detalhada para compreender a estrutura do dataset, detectar _outliers_ e avaliar as relações entre as variáveis socioeconômicas e a frota nacional.
 
-Foram analisadas medidas de tendência central para compreender o comportamento médio dos dados.
+### Análise Estatística Descritiva
 
-A categoria **automóveis** apresentou um total de **64.816.620** registros, com média de **11.632,56** por unidade de análise. Já a categoria **motocicletas** apresentou total de **30.167.365**, com média de **5.414,10**. 
+Abaixo, apresentam-se as medidas de tendência central e dispersão calculadas após a limpeza e unificação dos dados.
 
-A diferença entre os totais e médias indica que a distribuição não é uniforme entre as categorias, havendo predominância de automóveis em relação às motocicletas.
+| Variável                | Média    | Mediana  | Desvio Padrão | Insight Técnico                                                |
+| :---------------------- | :------- | :------- | :------------ | :------------------------------------------------------------- |
+| **População**           | 36.453   | 11.064   | 206.500       | Assimetria à direita extrema (presença de metrópoles).         |
+| **Target % Diesel**     | 9,52%    | 8,98%    | 3,89          | Distribuição próxima à normal, ideal para modelagem.           |
+| **PIB Agro per capita** | R$ 8.220 | R$ 2.829 | R$ 16.805     | Alta variabilidade; motor principal da demanda rural.          |
+| **Rodovia Federal**     | 0,019    | 0,00     | 0,139         | Variável binária (apenas 2% dos municípios com malha federal). |
 
-##  Medidas de Dispersão
+> **Nota sobre a Escala:** O `pib_per_capita` foi processado em escala de magnitude específica para manter a sensibilidade às variações decimais durante o cálculo de correlação de Pearson, garantindo que o modelo capture diferenças sutis de riqueza.
 
-A análise de dispersão evidenciou grande variação entre os estados.
+### Decisões Estratégicas de Engenharia de Dados
 
-Para automóveis, o maior valor foi observado no estado de **São Paulo (SP)**, com **20.828.244**, enquanto o menor valor ocorreu em **Roraima (RR)**, com **102.444**.
+Durante o processo de ETL e Análise Exploratória, tomamos decisões críticas para garantir a qualidade do modelo:
 
-Para motocicletas, o maior valor também foi registrado em **São Paulo (SP)** (**6.008.623**), enquanto o menor ocorreu no **Amapá (AP)** (**93.671**).
+1.  **O Ponto Cego da Infraestrutura:** Identificamos que a variável `km_terra_por_habitante` apresentava baixa densidade de dados (baixa variância). Optamos por substituí-la pela variável binarizada `presenca_rodovia_federal` (1 se o município possui registro no DNIT, 0 caso contrário), funcionando como um indicador de polo logístico.
+2.  **Temporalidade do PIB:** Detectamos que a base IBGE de 2023 não dispõe do detalhamento setorial (VAB). Por isso, retrocedemos o corte temporal para **2021** para as colunas de Agro, Indústria e Serviços, mantendo a precisão analítica.
 
-Essa grande diferença entre valores mínimos e máximos indica **alta dispersão e desigualdade na distribuição dos dados entre os estados**.
+---
 
-##  Análise Gráfica
+## 📈 Visualização e Achados
 
-![Gráfico da análise](./img/Gráfico_análise_de_dados_Oficiais.png)
+### Distribuição e Outliers (Histogramas e Boxplots)
 
-Os gráficos de pizza evidenciaram a distribuição percentual dos veículos por estado.
+As visualizações permitiram identificar padrões de concentração e anomalias:
 
-No caso dos automóveis:
+- **Histogramas:** Confirmaram o perfil "Long Tail" (cauda longa) do Brasil, onde a maioria dos municípios é pequena, justificando o uso de taxas percentuais em vez de valores absolutos.
+  ![Histogramas](./img/Distribuicao_Histogramas.png)
+- **Boxplots:** Revelaram _outliers_ agressivos. Detectamos um município onde **76% da frota é composta por diesel**, um ponto de interesse extremo para o modelo preditivo.
+  ![Boxplots](./img/Outliers_Boxplots.png)
+- **Identificação de Gigantes:** O outlier populacional isolado representa a cidade de São Paulo, enquanto os extremos de PIB per capita representam cidades com polos industriais ou extrativistas.
 
-- O estado de **São Paulo (SP)** concentra aproximadamente **38%** do total;
-- Outros estados como **Minas Gerais (MG)** (~13,7%) e **Paraná (PR)** (~9,6%) também apresentam participação relevante. 
+### Relações entre Variáveis (Mapa de Calor)
 
-Para motocicletas:
+A análise de correlação de Pearson revelou os seguintes achados:
 
-- **São Paulo (SP)** também lidera com cerca de **28,3%**; 
-- **Minas Gerais (MG)** (~15,5%) aparece em segundo lugar.
+- **Conexão Agro-Diesel (0.43):** Correlação positiva moderada. Validamos que o agronegócio é, de fato, o principal impulsionador da motorização diesel.
+- **População x Diesel (-0.08):** Correlação negativa que confirma que grandes centros urbanos priorizam veículos flex/gasolina.
+- **Poder Econômico (0.26):** O PIB per capita também influencia a frota diesel, mas em menor escala que a vocação agropecuária específica.
+  ![Histogramas](./img/Matriz_Correlação_Heatmap.png)
 
-Esses resultados demonstram forte concentração em poucos estados.
+---
+
+## 💻 Trechos de Código Relevantes
+
+### 1. Binarização da Infraestrutura (ETL DNIT)
+
+```python
+# Transforma uma métrica esparsa em um indicador binário de polo logístico
+df_infra['presenca_rodovia_federal'] = df_infra['Extensão'].apply(lambda x: 1 if x > 0 else 0)
 
 
-## Identificação de Outliers
+# 2. Tratamento de Fallback Temporal (ETL PIB)
+# Busca automática pelo ano mais recente com dados setoriais completos
+anos_disponiveis = sorted(df_raw['Ano'].unique(), reverse=True)
+for ano in anos_disponiveis:
+    if df_ano.iloc[:, 32].sum() > 0: # Coluna do VAB Agropecuário
+        ano_selecionado = ano # 2021 selecionado
+        break
 
-A grande diferença entre estados com valores muito altos (como SP) e estados com valores muito baixos (como RR e AP) indica a presença de **valores extremos (outliers)**.
+```
 
-Esses valores não necessariamente representam erros, mas sim diferenças estruturais reais, como tamanho populacional e nível de urbanização.
+## 🛠️ Ferramentas Utilizadas
 
-## Análise de Correlação
+- **Linguagem**: Python 3.11
+- **Bibliotecas de Dados**: Pandas, Numpy
+- **Bibliotecas Gráficas**: Seaborn, Matplotlib
+- **Ambiente**: Jupyter Notebook / VS Code
 
-Embora não explicitamente quantificada no gráfico apresentado, a análise geral dos dados sugere que variáveis relacionadas à quantidade de veículos tendem a apresentar **correlação positiva**, já que estados com maior número de automóveis também apresentam maior número de motocicletas.
+## 📁 Estrutura da Pasta src
 
-## Análise de Variáveis Categóricas
+No diretório src, incluímos os scripts completos:
 
-A variável categórica **UF** demonstrou forte concentração regional: 
-- **São Paulo (SP)** se destaca amplamente como o estado com maior número de veículos; 
-- Estados do Sudeste e Sul apresentam maior participação; 
-- Estados do Norte possuem menor representatividade.
-- 
-Isso indica uma distribuição desigual entre as regiões do país. 
+[`ETL/script_etl_censo_demográfico.py`](ETL/script_etl_censo_demográfico.py): Tratamento de dados Populacional e densidade demográfica.
 
-## Insights da Análise
-A análise exploratória revelou padrões importantes:
+[`ETL/script_ETL_dnit.py`](ETL/script_ETL_dnit.py): Processamento de infraestrutura e binarização.
 
-- Forte concentração de veículos em poucos estados, especialmente em São Paulo; 
-- Predominância de automóveis em relação às motocicletas; 
-- Alta variabilidade entre estados, indicando desigualdade regional; 
-- Presença de valores extremos que refletem diferenças socioeconômicas e populacionais. 
+[`ETL/script_ETL_frota_RENAVAM.py`](ETL/script_ETL_dnit.py): Processamento de dados da Frota Brasileira
 
-## Conclusão
-A análise descritiva e exploratória permitiu identificar padrões relevantes na distribuição de veículos no Brasil, evidenciando concentração geográfica, diferenças significativas entre categorias e presença de valores extremos.
+[`ETL/script_etl_PIB_municipios.py`](ETL/script_ETL_dnit.py): Tratamento de dados econômicos e escala.
 
-Esses resultados são fundamentais para compreender a estrutura dos dados e podem subsidiar análises futuras, como estudos de mobilidade, planejamento urbano e modelagem estatística.
+[`ETL/Dados Tratados/unificador_final.py`](ETL/script_ETL_dnit.py): Script mestre de integração das bases.
+
+[`analise_exploratoria.ipynb`](ETL/script_ETL_dnit.py): Notebook com as visualizações e estatísticas.
+
+## Instalando as dependências
+
+Para instalar as dependências basta digitar no terminal:
+
+```Terminal
+pip install -r requirements.txt
+```
