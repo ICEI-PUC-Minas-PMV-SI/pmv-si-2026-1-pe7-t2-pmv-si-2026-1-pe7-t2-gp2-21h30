@@ -1,0 +1,35 @@
+# Ignorar controle de versão
+.git
+.github
+.gitignore
+
+# Ignorar caches do Python e do SO
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db
+
+# Ignorar ambientes virtuais locais
+.env
+.venv
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Ignorar documentações, apresentações e ajuda locais (não necessários em execução)
+docs/
+presentation/
+help/
+implementation_plan.md
+task.md
+walkthrough.md
+
+# Ignorar notebooks e relatórios locais pesados
+*.ipynb
+*.html
+*.csv
+# Mas não ignorar o dataset final que está em ETL/Dados Tratados/Dados Unificados/
+!ETL/Dados Tratados/Dados Unificados/dataset_final_modelagem.csv

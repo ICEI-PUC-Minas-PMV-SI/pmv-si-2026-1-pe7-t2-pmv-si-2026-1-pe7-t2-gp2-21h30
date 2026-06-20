@@ -1,29 +1,31 @@
-cff-version: 1.0.1
-message: Please cite this software using these metadata.
-title:
+cff-version: 1.2.0
+message: "Please cite this software using these metadata."
+title: "Análise da Variabilidade Regional do Mercado Automotivo Brasileiro via RENAVAM"
 authors:
-  - family-names:
-    given-names:
-  - family-names:
-    given-names:
-  - family-names:
-    given-names:
-  - family-names:
-    given-names:
-  - family-names:
-    given-names:
-  - family-names:
-    given-names:
-  - family-names:
-    given-names:
-  - name-suffix: Professor XXXX
-    affiliation: PUC Minas
-    family-names:
-    given-names:
+  - family-names: "Ramos"
+    given-names: "André"
+  - family-names: "Modesto"
+    given-names: "Gilberto"
+  - family-names: "Pereira"
+    given-names: "Gustavo Gino"
+  - family-names: "Damião"
+    given-names: "Isabella Carolina de Almeida Siqueira"
+  - family-names: "Teixeira"
+    given-names: "Natã Gabriel"
+  - family-names: "Damião"
+    given-names: "Rhafael Hector de Siqueira"
+  - family-names: "Oliveira"
+    given-names: "Thiago Ferreira de"
+  - name-suffix: "Professor"
+    affiliation: "PUC Minas"
+    family-names: "Tizzo"
+    given-names: "Neil Paiva"
 keywords:
-  -
-  -
-repository-code:
-license: CC-BY-4.0
-version: 1.0.0
-date-released: 2023-06-30
+  - "RENAVAM"
+  - "Machine Learning"
+  - "Frota Diesel"
+  - "Análise Regional"
+repository-code: "https://github.com/ICEI-PUC-Minas-PMV-SI/pmv-si-2026-1-pe7-t2-pmv-si-2026-1-pe7-t2-gp2-21h30"
+license: "CC-BY-4.0"
+version: "1.0.0"
+date-released: "2026-06-20"

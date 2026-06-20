@@ -61,7 +61,7 @@ def preparar_dados(caminho_csv, target_col='target_perc_diesel', test_size=0.2, 
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
     
-    return X_train_scaled, X_test_scaled, y_train, y_test, list(features_nomes)
+    return X_train_scaled, X_test_scaled, y_train, y_test, list(features_nomes), scaler
 
 if __name__ == "__main__":
     # Teste rápido do script
@@ -69,8 +69,9 @@ if __name__ == "__main__":
     diretorio_raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     caminho_dados = os.path.join(diretorio_raiz, 'ETL', 'Dados Tratados', 'Dados Unificados', 'dataset_final_modelagem.csv')
     if os.path.exists(caminho_dados):
-        X_train, X_test, y_train, y_test, features = preparar_dados(caminho_dados)
+        X_train, X_test, y_train, y_test, features, scaler = preparar_dados(caminho_dados)
         print(f"Sucesso! Shape de X_train: {X_train.shape}")
         print(f"Features preditoras utilizadas ({len(features)}): {features}")
+        print(f"Scaler ajustado: {scaler}")
     else:
         print(f"Caminho não encontrado para teste: {caminho_dados}")

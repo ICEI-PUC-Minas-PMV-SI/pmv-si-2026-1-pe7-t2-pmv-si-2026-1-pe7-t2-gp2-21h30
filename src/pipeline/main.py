@@ -21,7 +21,7 @@ def executar_pipeline(caminho_dados, alvo='target_perc_diesel'):
     
     # 1. Carregamento e Pré-processamento
     print("\n[Passo 1/4] Preparando dados e aplicando Z-Score...")
-    X_train, X_test, y_train, y_test, features_nomes = preparar_dados(
+    X_train, X_test, y_train, y_test, features_nomes, scaler = preparar_dados(
         caminho_csv=caminho_dados,
         target_col=alvo
     )
@@ -63,6 +63,20 @@ def executar_pipeline(caminho_dados, alvo='target_perc_diesel'):
     # Salvar tabela de métricas em CSV para referência futura no notebook
     caminho_tabela = os.path.join(diretorio_raiz, 'tabela_comparacao_etapa4.csv')
     df_comparativo.to_csv(caminho_tabela, index=False)
+    
+    # Salvar o scaler e o melhor modelo (XGBoost) para inferência dinâmica
+    import joblib
+    diretorio_modelos = os.path.join(diretorio_raiz, 'models')
+    os.makedirs(diretorio_modelos, exist_ok=True)
+    
+    caminho_scaler = os.path.join(diretorio_modelos, 'scaler.joblib')
+    joblib.dump(scaler, caminho_scaler)
+    print(f"\n[INFO] Scaler salvo com sucesso em: {caminho_scaler}")
+    
+    if "XGBoost Regressor" in modelos_treinados:
+        caminho_modelo = os.path.join(diretorio_modelos, 'model_xgboost.joblib')
+        joblib.dump(modelos_treinados["XGBoost Regressor"], caminho_modelo)
+        print(f"[INFO] Modelo XGBoost Regressor salvo com sucesso em: {caminho_modelo}")
     
     return modelos_treinados
 
