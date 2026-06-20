@@ -1,0 +1,13 @@
+# Arquivos compilados do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos sensíveis do Streamlit
+.streamlit/secrets.toml
+
+# Ambientes virtuais (se usar)
+.venv/
+venv/
+env/

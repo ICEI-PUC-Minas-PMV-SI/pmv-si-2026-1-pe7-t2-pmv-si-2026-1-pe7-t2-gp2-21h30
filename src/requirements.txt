@@ -9,3 +9,8 @@ xlrd
 xgboost
 streamlit
 joblib
+streamlit-option-menu
+streamlit-lottie
+streamlit-extras
+plotly
+requests
