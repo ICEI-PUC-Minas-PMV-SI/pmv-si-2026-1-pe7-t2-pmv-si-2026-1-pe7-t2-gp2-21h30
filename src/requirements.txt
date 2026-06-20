@@ -2,5 +2,7 @@ pandas
 numpy
 matplotlib
 seaborn
+scipy
+scikit-learn
 openpyxl
 xlrd

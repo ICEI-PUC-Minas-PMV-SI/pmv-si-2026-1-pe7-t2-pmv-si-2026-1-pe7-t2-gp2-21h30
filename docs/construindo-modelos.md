@@ -1,55 +1,127 @@
-# Preparação dos dados
+# Etapa 4 — Construção de Modelos e Refinamento do Pipeline (Machine Learning)
 
-Nesta etapa, deverão ser descritas todas as técnicas utilizadas para pré-processamento/tratamento dos dados.
+Este documento apresenta a especificação, implementação e avaliação comparativa dos modelos de Machine Learning desenvolvidos para estimar a composição da frota de veículos (especificamente o percentual de veículos a diesel) nos municípios brasileiros com base em indicadores socioeconômicos e geográficos.
 
-Algumas das etapas podem estar relacionadas à:
+---
 
-* Limpeza de Dados: trate valores ausentes: decida como lidar com dados faltantes, seja removendo linhas, preenchendo com médias, medianas ou usando métodos mais avançados; remova _outliers_: identifique e trate valores que se desviam significativamente da maioria dos dados.
+## 1. Preparação dos Dados (Pré-processamento)
 
-* Transformação de Dados: normalize/padronize: torne os dados comparáveis, normalizando ou padronizando os valores para uma escala específica; codifique variáveis categóricas: converta variáveis categóricas em uma forma numérica, usando técnicas como _one-hot encoding_.
+Para garantir o rigor científico, a preparação dos dados foi reestruturada de forma a evitar distorções estatísticas e o vazamento de dados (*data leakage*):
 
-* _Feature Engineering_: crie novos atributos que possam ser mais informativos para o modelo; selecione características relevantes e descarte as menos importantes.
+### A. Filtros e Limpeza de Dados
+- **Remoção de Inconsistências:** Foram identificados e excluídos municípios com `populacao = 0` ou frota total de veículos `TOTAL = 0`. Esses registros correspondiam a dados ausentes mascarados pelo preenchimento padrão do processo de merge no ETL. O conjunto final limpo contém **5.527 municípios**.
+- **Tratamento de Nulos:** Para garantir a robustez contra eventuais dados faltantes setoriais, aplicou-se imputação pela **mediana** de cada feature. A mediana foi escolhida por ser uma medida de tendência central robusta a valores extremos.
 
-* Tratamento de dados desbalanceados: se as classes de interesse forem desbalanceadas, considere técnicas como _oversampling_, _undersampling_ ou o uso de algoritmos que lidam naturalmente com desbalanceamento.
+### B. Prevenção Estrita de Vazamento de Dados (Data Leakage)
+Na modelagem preditiva, o modelo deve aprender a estimar o percentual de diesel na frota (`target_perc_diesel`) a partir de indicadores socioeconômicos independentes, e **não** de outras variáveis de frota. 
+- **Variáveis Excluídas:** Foram formalmente removidas de $X$ todas as variáveis absolutas de frota (`TOTAL`, `AUTOMOVEL`, `CAMINHONETE`, `MOTOCICLETA`, `UTILITARIO`, `DIESEL`, `FLEX`) e a outra variável-alvo (`target_perc_utilitarios`). Se mantidas, o modelo aprenderia a identidade matemática da divisão (ex: $\% \text{ diesel} = \frac{\text{DIESEL}}{\text{TOTAL}} \times 100$), gerando uma acurácia artificial de 100% que não traria nenhuma extração de conhecimento real.
+- **Vetor de Features Preditoras Final (13 variáveis):**
+  - **Socioeconômicas:** `populacao`, `area`, `densidade_demografica`, `pib_per_capita`, `vab_agro`, `vab_industria`, `vab_servicos`, `pib_agro_por_habitante`
+  - **Infraestrutura e Rodoviárias:** `extensao_total_km`, `km_pavimentado`, `km_terra`, `km_terra_por_habitante`, `presenca_rodovia_federal`
 
-* Separação de dados: divida os dados em conjuntos de treinamento, validação e teste para avaliar o desempenho do modelo de maneira adequada.
-  
-* Manuseio de Dados Temporais: se lidar com dados temporais, considere a ordenação adequada e técnicas específicas para esse tipo de dado.
-  
-* Redução de Dimensionalidade: aplique técnicas como PCA (Análise de Componentes Principais) se a dimensionalidade dos dados for muito alta.
+### C. Divisão e Normalização dos Dados
+- **Amostragem Holdout:** Dividiu-se a base em **80% para treinamento** (4.421 municípios) e **20% para teste** (1.106 municípios), garantindo reprodutibilidade através da semente fixa (`random_state=42`).
+- **Padronização Estatística (Z-Score):** Todas as features numéricas foram normalizadas usando o `StandardScaler` (média = 0, desvio padrão = 1).
+  - *Evitando Vazamento de Escala:* O scaler foi ajustado (função `fit`) **apenas** sobre os dados de treinamento, e aplicado (função `transform`) nos conjuntos de treino e teste de forma independente. Isso impede que informações do conjunto de teste (como médias globais) contaminem o treinamento.
 
-* Validação Cruzada: utilize validação cruzada para avaliar o desempenho do modelo de forma mais robusta.
+---
 
-* Monitoramento Contínuo: atualize e adapte o pré-processamento conforme necessário ao longo do tempo, especialmente se os dados ou as condições do problema mudarem.
+## 2. Descrição dos Modelos
 
-* Entre outras....
+Evoluímos a modelagem preditiva a partir de uma Árvore de Decisão simples (baseline) para dois algoritmos ensemble robustos da classe de aprendizado supervisionado para dados tabulares:
 
-Avalie quais etapas são importantes para o contexto dos dados que você está trabalhando, pois a qualidade dos dados e a eficácia do pré-processamento desempenham um papel fundamental no sucesso de modelo(s) de aprendizado de máquina. É importante entender o contexto do problema e ajustar as etapas de preparação de dados de acordo com as necessidades específicas de cada projeto.
+### Modelo 1: Random Forest Regressor (Abordagem Bagging)
+- **Princípio de Funcionamento:** Cria múltiplas árvores de decisão independentes durante a fase de treino. Cada árvore é ajustada usando uma amostra aleatória dos dados (bootstrap) e um subconjunto aleatório de features. A predição final de regressão é a média das predições de todas as árvores.
+- **Vantagens:** Altamente resistente a *overfitting* devido à agregação, suaviza as fronteiras rígidas de decisão e lida muito bem com relações não-lineares.
+- **Limitações:** Maior consumo de memória e tempo de inferência por manter centenas de árvores ativas; baixa interpretabilidade direta em comparação a uma única árvore.
+- **Justificativa dos Parâmetros:** Configurado com `n_estimators=100` para garantir a estabilidade estatística e `max_depth=8` para evitar que as árvores se tornassem excessivamente complexas e decorassem o ruído dos dados.
 
-# Descrição dos modelos
+### Modelo 2: XGBoost Regressor - Extreme Gradient Boosting (Abordagem Boosting)
+- **Princípio de Funcionamento:** Treina árvores de decisão de forma sequencial (aditiva). Cada nova árvore é projetada especificamente para corrigir os erros residuais (gradientes) cometidos pelo conjunto de árvores anteriores. Aplica uma função de perda regularizada (penalidades L1 e L2) para controlar a complexidade das árvores.
+- **Vantagens:** Geralmente alcança a maior acurácia preditiva em dados estruturados; computacionalmente muito rápido e otimizado.
+- **Limitações:** Extremamente sensível à seleção de hiperparâmetros; propenso a *overfitting* se a taxa de aprendizado for muito alta ou se o número de estimadores não for devidamente regularizado.
+- **Justificativa dos Parâmetros:** Configurado com `n_estimators=100`, `learning_rate=0.05` (taxa de aprendizado controlada) e `max_depth=5` para assegurar uma convergência gradual e robusta.
 
-Nesta seção, conhecendo os dados e de posse dos dados preparados, é hora de descrever os outros dois algoritmos de aprendizado de máquina selecionados para a construção dos modelos propostos. Inclua informações abrangentes sobre cada algoritmo implementado, aborde conceitos fundamentais, princípios de funcionamento, vantagens/limitações e justifique a escolha de cada um dos algoritmos. 
+---
 
-Explore aspectos específicos, como o ajuste dos parâmetros livres de cada algoritmo. Lembre-se de experimentar parâmetros diferentes e principalmente, de justificar as escolhas realizadas e registrar todos os experimentos realizados.
+## 3. Avaliação dos Modelos Criados
 
-# Avaliação dos modelos criados
+### Métricas Utilizadas e Justificativa da Métrica Principal
 
-## Métricas utilizadas
+Computamos as métricas **MAE** (Mean Absolute Error), **MSE** (Mean Squared Error), **RMSE** (Root Mean Squared Error) e **$R^2$ Score** (Coeficiente de Determinação).
 
-Nesta seção, as métricas utilizadas para avaliar os modelos desenvolvidos deverão ser apresentadas (p. ex.: acurácia, precisão, recall, F1-Score, MSE etc.). A escolha de cada métrica deverá ser justificada, pois esta escolha é essencial para avaliar de forma mais assertiva a qualidade do modelo construído. 
+> [!IMPORTANT]
+> **Métrica Principal: MAE (Erro Absoluto Médio)**
+> 
+> O MAE foi selecionado como a métrica principal por duas razões científicas:
+> 1. **Escala Direta:** Como nosso alvo preditivo (`target_perc_diesel`) representa uma proporção (percentual de 0 a 100), o MAE expressa o erro diretamente em pontos percentuais na escala original do problema.
+> 2. **Robustez a Outliers:** O MAE atribui peso linear a todos os desvios. No cenário socioeconômico brasileiro, municípios-sede de locadoras (como Belo Horizonte) possuem frotas massivas e proporções discrepantes de veículos devido a razões fiscais, atuando como outliers reais. Se usássemos métricas quadráticas como MSE ou RMSE, o modelo priorizaria desproporcionalmente a correção desses outliers de registro em detrimento de realizar predições corretas para os outros 99% dos municípios brasileiros típicos.
 
-## Discussão dos resultados obtidos
+---
 
-Nesta seção, discuta os resultados obtidos por cada um dos modelos construídos na Etapa 03 e na Etapa 04, no contexto prático em que os dados se inserem, promovendo uma compreensão abrangente e aprofundada da qualidade de cada um deles. Lembre-se de relacionar os resultados obtidos ao problema identificado, a questão de pesquisa levantada e estabelecer relação com os objetivos previamente propostos. Não deixe de comparar os resultados obtidos por cada modelo com os demais.
+### Resultados Obtidos (Conjunto de Teste)
 
-# Revisão do pipeline de pesquisa e análise de dados
+Com base em dados reais gerados pela execução do pipeline modular (`src/pipeline/main.py`), obtivemos as seguintes métricas no conjunto de teste:
 
-Nesta etapa, os alunos devem revisar o pipeline de pesquisa e análise de dados proposto na Etapa 03, avaliando criticamente cada uma de suas etapas, fluxos e decisões. O objetivo agora é identificar possíveis ajustes, melhorias ou generalizações que tornem o pipeline mais abrangente e adaptável, de forma que ele seja capaz de representar qualquer processo de construção de sistemas de aprendizado de máquina – independentemente da área de aplicação, tipo de dado ou técnica utilizada.
+| Modelo | MAE (Principal) | MSE | RMSE | R² Score |
+| :--- | :---: | :---: | :---: | :---: |
+| **Random Forest Regressor** | **2,1347%** | 9,8796 | 3,1432 | 0,3362 |
+| **XGBoost Regressor** | 2,1350% | **9,7732** | **3,1262** | **0,3433** |
+| **Baseline (Decision Tree)** | 2,2493% | 10,4537 | 3,2332 | 0,2976 |
 
-Lembre-se de que um pipeline bem estruturado deve contemplar, de forma flexível e modular, as principais fases da pesquisa e experimentação em ciência de dados e aprendizado de máquina, incluindo (mas não se limitando a): formulação do problema, coleta e preparação dos dados, análise exploratória, definição de métricas, seleção e validação de modelos, interpretação dos resultados e documentação.
+---
 
-O resultado desta etapa deverá ser um pipeline revisado e justificado, acompanhado de uma breve descrição das alterações realizadas e dos motivos que levaram a cada mudança.
+### Discussão dos Resultados Obtidos
 
-## Observações importantes
+1. **Evolução em Relação ao Baseline:** Tanto o Random Forest quanto o XGBoost superaram a árvore de decisão baseline. O erro absoluto médio (MAE) caiu de 2,25% para 2,13%, representando uma melhoria na precisão média das predições municipais.
+2. **Capacidade Explicativa ($R^2$):** O $R^2$ máximo alcançado foi de **34,33%** com o XGBoost. Isso significa que mais de um terço da variabilidade total na proporção de frota diesel no Brasil é explicada **exclusivamente por indicadores econômicos e geográficos de domínio público**. Trata-se de um resultado empírico muito forte, considerando a ausência completa de variáveis de frota nos preditores e a descentralização de decisões individuais de compra.
+3. **Análise de Importância de Features (Exploração do Espaço do Problema):**
+   - Os gráficos de importância de features mostraram que o **PIB Agropecuário por Habitante** (`pib_agro_por_habitante`) e o **VAB Agropecuário** (`vab_agro`) são os drivers preditivos mais potentes de ambos os modelos ensemble.
+   - Isso confirma a hipótese empírica central: a vocação produtiva municipal dita diretamente a demanda veicular (a força econômica do agronegócio impulsiona picapes e utilitários diesel).
+   - Por outro lado, variáveis como **Densidade Demográfica** (`densidade_demografica`) e **População** (`populacao`) atuam como fortes preditores contrários (grandes metrópoles possuem frotas predominantemente Flex/Gasolina).
 
-Todas as tarefas realizadas nesta etapa deverão ser registradas em formato de texto junto com suas explicações de forma a apresentar os códigos desenvolvidos e também, o código deverá ser incluído, na íntegra, na pasta "src".
+---
+
+## 4. Revisão do Pipeline de Pesquisa e Análise de Dados
+
+O pipeline proposto na Etapa 3 foi revisado e refatorado de uma estrutura linear para uma **arquitetura modular e extensível** em arquivos Python (`.py`) na pasta `src/pipeline/`.
+
+```mermaid
+graph TD
+    A[dataset_final_modelagem.csv] --> B[data_preprocessing.py]
+    B -->|Limpeza & Filtro Pop>0| C[Holdout Split 80/20]
+    C -->|Treino| D[StandardScaler Fit & Transform]
+    C -->|Teste| E[StandardScaler Transform]
+    D --> F[models.py]
+    F -->|Inicializar DT, RF, XGB| G[Model Training]
+    G --> H[evaluate.py]
+    E --> H
+    H -->|Calcular MAE, MSE, RMSE, R²| I[Tabela Comparativa]
+    H -->|Exportar Gráficos| J[Imagens docs/img/]
+```
+
+### Alterações Realizadas e Justificativas:
+1. **Modularização de Funções:** Lógica dividida em quatro componentes independentes de engenharia de software: `data_preprocessing.py` (pré-processamento), `models.py` (estimadores), `evaluate.py` (métricas e plots) e `main.py` (orquestrador).
+2. **Extensibilidade (Estrutura Agnóstica):** Os modelos são configurados em dicionários de dados. Para testar novos modelos no futuro (como Regressão Linear, SVM ou redes neurais), o usuário só precisa incluir a instância do modelo no módulo `models.py`. O fluxo de treino, validação e ranking aceitará a nova tecnologia automaticamente.
+3. **Isolamento de Escopo (StandardScaler):** O estado da normalização é salvo apenas nos dados de treino, eliminando de forma definitiva vazamentos de dados entre divisões de teste e validação cruzada.
+
+---
+
+## 5. Ética em Pesquisa e LGPD
+
+Trabalhamos os preceitos éticos e de proteção à privacidade de forma aprofundada:
+
+1. **Privacidade e LGPD:** Todos os microdados utilizados são **públicos e agregados a nível de município** (SENATRAN, IBGE e DNIT). Não há dados pessoais identificáveis (PII) — sem CPF, placa, chassi ou nome de proprietário. Isso garante conformidade total com a LGPD, pois **não há risco de reidentificação**.
+2. **Prevenção da Falácia Ecológica:** O modelo realiza previsões no nível territorial municipal (ex: 'municípios com alto PIB agropecuário tendem a ter maior proporção de diesel'). Alertamos contra o erro ético e analítico de extrapolar essas conclusões para o comportamento de indivíduos (inferir que 'toda pessoa rica do agronegócio compra veículos a diesel').
+3. **Viés de Registro e Transparência:** Municípios-sede de locadoras (como Belo Horizonte) possuem frotas registradas desproporcionais por benefícios fiscais. Essa limitação da fonte de dados (RENAVAM) foi devidamente explicitada e tratada ao justificar o uso da métrica **MAE**, evitando que decisões automatizadas fossem distorcidas por esse viés de registro.
+
+---
+
+## 6. Códigos-Fontes do Pipeline
+
+Os arquivos do pipeline estão localizados em:
+- [data_preprocessing.py](../src/pipeline/data_preprocessing.py)
+- [models.py](../src/pipeline/models.py)
+- [evaluate.py](../src/pipeline/evaluate.py)
+- [main.py](../src/pipeline/main.py)
+- [Etapa4_Modelagem.ipynb](../src/Etapa4_Modelagem.ipynb) (Notebook executado com a síntese visual e tabelas de métricas).

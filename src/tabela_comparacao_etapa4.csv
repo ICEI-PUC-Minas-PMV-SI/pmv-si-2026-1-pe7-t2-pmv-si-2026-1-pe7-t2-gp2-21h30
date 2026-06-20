@@ -1,0 +1,4 @@
+Modelo,MAE (Principal),MSE,RMSE,R2 Score
+Random Forest Regressor,2.1347,9.8796,3.1432,0.3362
+XGBoost Regressor,2.135,9.7732,3.1262,0.3433
+Baseline (Decision Tree),2.2493,10.4537,3.2332,0.2976
