@@ -12,9 +12,15 @@ Para garantir o rigor científico, a preparação dos dados foi reestruturada de
 - **Remoção de Inconsistências:** Foram identificados e excluídos municípios com `populacao = 0` ou frota total de veículos `TOTAL = 0`. Esses registros correspondiam a dados ausentes mascarados pelo preenchimento padrão do processo de merge no ETL. O conjunto final limpo contém **5.527 municípios**.
 - **Tratamento de Nulos:** Para garantir a robustez contra eventuais dados faltantes setoriais, aplicou-se imputação pela **mediana** de cada feature. A mediana foi escolhida por ser uma medida de tendência central robusta a valores extremos.
 
-### B. Prevenção Estrita de Vazamento de Dados (Data Leakage)
-Na modelagem preditiva, o modelo deve aprender a estimar o percentual de diesel na frota (`target_perc_diesel`) a partir de indicadores socioeconômicos independentes, e **não** de outras variáveis de frota. 
-- **Variáveis Excluídas:** Foram formalmente removidas de $X$ todas as variáveis absolutas de frota (`TOTAL`, `AUTOMOVEL`, `CAMINHONETE`, `MOTOCICLETA`, `UTILITARIO`, `DIESEL`, `FLEX`) e a outra variável-alvo (`target_perc_utilitarios`). Se mantidas, o modelo aprenderia a identidade matemática da divisão (ex: $\% \text{ diesel} = \frac{\text{DIESEL}}{\text{TOTAL}} \times 100$), gerando uma acurácia artificial de 100% que não traria nenhuma extração de conhecimento real.
+### B. Prevenção Estrita de Vazamento de Dados (Data Leakage) e Diferenças com a Etapa 3
+Na modelagem preditiva supervisionada da Etapa 4, o modelo deve aprender a estimar o percentual de diesel na frota (`target_perc_diesel`) a partir de indicadores socioeconômicos independentes, e **não** de outras variáveis da própria frota.
+
+> [!IMPORTANT]
+> **Diferença de Pré-processamento: Etapa 3 vs. Etapa 4**
+> - **Na Etapa 3 (Clusterização K-Means):** Como o objetivo era puramente exploratório de perfis e agrupamentos não supervisionados, as variáveis de frota como `target_perc_diesel` e `target_perc_utilitarios` foram **incluídas** como features de entrada. O algoritmo utilizou as próprias proporções de combustíveis para posicionar os municípios nos clusters de perfil automotivo.
+> - **Na Etapa 4 (Regressão Supervisionada):** As variáveis de frota foram **estritamente removidas**. Manter variáveis como `TOTAL`, `AUTOMOVEL`, `CAMINHONETE` ou `DIESEL` na matriz de treino representaria vazamento de dados (*data leakage*), pois o modelo aprenderia a equação matemática direta ($\% \text{ diesel} = \frac{\text{DIESEL}}{\text{TOTAL}} \times 100$) em vez de extrair conhecimento sobre as relações socioeconômicas subjacentes.
+
+- **Variáveis Excluídas da Regressão:** `TOTAL`, `AUTOMOVEL`, `CAMINHONETE`, `MOTOCICLETA`, `UTILITARIO`, `DIESEL`, `FLEX`, `target_perc_utilitarios` e a própria variável-alvo (`target_perc_diesel`).
 - **Vetor de Features Preditoras Final (13 variáveis):**
   - **Socioeconômicas:** `populacao`, `area`, `densidade_demografica`, `pib_per_capita`, `vab_agro`, `vab_industria`, `vab_servicos`, `pib_agro_por_habitante`
   - **Infraestrutura e Rodoviárias:** `extensao_total_km`, `km_pavimentado`, `km_terra`, `km_terra_por_habitante`, `presenca_rodovia_federal`
@@ -65,16 +71,16 @@ Com base em dados reais gerados pela execução do pipeline modular (`src/pipeli
 
 | Modelo | MAE (Principal) | MSE | RMSE | R² Score |
 | :--- | :---: | :---: | :---: | :---: |
-| **Random Forest Regressor** | **2,1347%** | 9,8796 | 3,1432 | 0,3362 |
-| **XGBoost Regressor** | 2,1350% | **9,7732** | **3,1262** | **0,3433** |
+| **XGBoost Regressor** | **2,1286%** | **9,7386** | **3,1207** | **0,3456** |
+| **Random Forest Regressor** | 2,1364% | 9,8983 | 3,1462 | 0,3349 |
 | **Baseline (Decision Tree)** | 2,2493% | 10,4537 | 3,2332 | 0,2976 |
 
 ---
 
 ### Discussão dos Resultados Obtidos
 
-1. **Evolução em Relação ao Baseline:** Tanto o Random Forest quanto o XGBoost superaram a árvore de decisão baseline. O erro absoluto médio (MAE) caiu de 2,25% para 2,13%, representando uma melhoria na precisão média das predições municipais.
-2. **Capacidade Explicativa ($R^2$):** O $R^2$ máximo alcançado foi de **34,33%** com o XGBoost. Isso significa que mais de um terço da variabilidade total na proporção de frota diesel no Brasil é explicada **exclusivamente por indicadores econômicos e geográficos de domínio público**. Trata-se de um resultado empírico muito forte, considerando a ausência completa de variáveis de frota nos preditores e a descentralização de decisões individuais de compra.
+1. **Evolução em Relação ao Baseline e Liderança do XGBoost:** Tanto o Random Forest quanto o XGBoost superaram significativamente a árvore de decisão baseline. O **XGBoost Regressor** alcançou o melhor desempenho do projeto, com o menor erro absoluto médio (MAE de **2,1286%**) e as melhores métricas gerais, logo seguido pelo Random Forest (MAE de **2,1364%**). A predição média erra por apenas cerca de 2,1 pontos percentuais em relação à proporção real de diesel na frota municipal.
+2. **Capacidade Explicativa ($R^2$):** O $R^2$ máximo alcançado foi de **34,56%** com o XGBoost. Isso significa que mais de um terço da variabilidade total na proporção de frota diesel no Brasil é explicada **exclusivamente por indicadores econômicos e geográficos de domínio público**. Trata-se de um resultado empírico forte, demonstrando que a vocação produtiva regional e o perfil demográfico (como agronegócio e densidade populacional) modelam diretamente a frota local, mesmo sem acesso a qualquer dado prévio de emplacamentos.
 3. **Análise de Importância de Features (Exploração do Espaço do Problema):**
    - Os gráficos de importância de features mostraram que o **PIB Agropecuário por Habitante** (`pib_agro_por_habitante`) e o **VAB Agropecuário** (`vab_agro`) são os drivers preditivos mais potentes de ambos os modelos ensemble.
    - Isso confirma a hipótese empírica central: a vocação produtiva municipal dita diretamente a demanda veicular (a força econômica do agronegócio impulsiona picapes e utilitários diesel).

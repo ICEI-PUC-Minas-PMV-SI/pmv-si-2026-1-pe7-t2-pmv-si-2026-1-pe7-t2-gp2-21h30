@@ -81,7 +81,7 @@ def gerar_graficos_diagnostico(nome_modelo, y_real, y_pred, modelo, features_nom
             'Importancia': importancias[indices]
         })
         
-        sns.barplot(data=df_imp.head(10), x='Importancia', y='Feature', palette='viridis')
+        sns.barplot(data=df_imp.head(10), x='Importancia', y='Feature', hue='Feature', palette='viridis', legend=False)
         plt.title(f'Importância das Features (Top 10) - {nome_modelo}')
         plt.xlabel('Importância Relativa')
         plt.ylabel('Feature')
