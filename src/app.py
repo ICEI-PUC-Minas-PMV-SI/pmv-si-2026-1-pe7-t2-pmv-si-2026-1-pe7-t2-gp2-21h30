@@ -9,7 +9,7 @@ import requests
 import plotly.express as px
 from streamlit_option_menu import option_menu
 from streamlit_lottie import st_lottie
-from streamlit_extras.stoggle import stoggle
+# from streamlit_extras.stoggle import stoggle
 
 # Configuração da Página do Streamlit
 st.set_page_config(
@@ -571,7 +571,7 @@ def exibir_resultados(pred_final, avg_nacional, insumos):
             xaxis=dict(title="", showgrid=False),
             yaxis=dict(title="Proporção Diesel (%)", showgrid=True, gridcolor="rgba(128,128,128,0.15)", range=[0, max(pred_final, avg_nacional) * 1.25])
         )
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(fig, width="stretch", config={'displayModeBar': False})
         
         st.write("**🔍 Por que o Modelo estimou este valor? (Análise Prática):**")
         
@@ -722,19 +722,24 @@ elif pagina == "Dados Reais":
         st.write("---")
         st.markdown("### 🔒 Variáveis Socioeconômicas Reais (Bloqueado)")
         st.caption("Os campos abaixo representam os dados reais do município e não podem ser editados nesta página.")
-        stoggle(
-            "ℹ️ Entenda o que significa cada variável do modelo",
+        st.markdown(
             """
-            • <b>População Total</b>: População residente estimada no município.<br>
-            • <b>Área Municipal</b>: Extensão territorial em quilômetros quadrados.<br>
-            • <b>Densidade Demográfica</b>: Habitantes por km² (calculado: População / Área).<br>
-            • <b>PIB per capita</b>: Produto Interno Bruto médio do município dividido pelos habitantes.<br>
-            • <b>VAB (Agropecuária, Indústria, Serviços)</b>: Valor Adicionado Bruto de cada setor de produção.<br>
-            • <b>Extensão de Rodovias (Total, Pavimentada, Terra)</b>: Perfil em km da malha rodoviária municipal.<br>
-            • <b>Presença de Rodovia Federal</b>: Se há passagens de rodovias federais (BR) no território.<br>
-            • <b>PIB Agropecuário por Habitante</b>: VAB Agropecuário dividido pela População.<br>
-            • <b>Estradas de Terra por Habitante</b>: Extensão de rodovias de terra dividida pela População.
-            """
+            <details style="cursor: pointer; margin-bottom: 10px;">
+                <summary style="font-weight: 600; color: #0072FF; outline: none;">ℹ️ Entenda o que significa cada variável do modelo</summary>
+                <div style="padding: 10px 0 0 15px; line-height: 1.6;">
+                    • <b>População Total</b>: População residente estimada no município.<br>
+                    • <b>Área Municipal</b>: Extensão territorial em quilômetros quadrados.<br>
+                    • <b>Densidade Demográfica</b>: Habitantes por km² (calculado: População / Área).<br>
+                    • <b>PIB per capita</b>: Produto Interno Bruto médio do município dividido pelos habitantes.<br>
+                    • <b>VAB (Agropecuária, Indústria, Serviços)</b>: Valor Adicionado Bruto de cada setor de produção.<br>
+                    • <b>Extensão de Rodovias (Total, Pavimentada, Terra)</b>: Perfil em km da malha rodoviária municipal.<br>
+                    • <b>Presença de Rodovia Federal</b>: Se há passagens de rodovias federais (BR) no território.<br>
+                    • <b>PIB Agropecuário por Habitante</b>: VAB Agropecuário dividido pela População.<br>
+                    • <b>Estradas de Terra por Habitante</b>: Extensão de rodovias de terra dividida pela População.
+                </div>
+            </details>
+            """,
+            unsafe_allow_html=True
         )
         
         # Renderizar formulário DESABILITADO (Bloqueado para edição), usando chave dinâmica opcao_muni
@@ -776,19 +781,24 @@ elif pagina == "Simulador":
     st.write("---")
     st.markdown("### ✍️ Simulador de Variáveis Preditoras (Habilitado)")
     st.caption("Ajuste os valores abaixo para testar novos cenários e clique em calcular.")
-    stoggle(
-        "ℹ️ Entenda o que significa cada variável do modelo",
+    st.markdown(
         """
-        • <b>População Total</b>: População residente estimada no município.<br>
-        • <b>Área Municipal</b>: Extensão territorial em quilômetros quadrados.<br>
-        • <b>Densidade Demográfica</b>: Habitantes por km² (calculado: População / Área).<br>
-        • <b>PIB per capita</b>: Produto Interno Bruto médio do município dividido pelos habitantes.<br>
-        • <b>VAB (Agropecuária, Indústria, Serviços)</b>: Valor Adicionado Bruto de cada setor de produção.<br>
-        • <b>Extensão de Rodovias (Total, Pavimentada, Terra)</b>: Perfil em km da malha rodoviária municipal.<br>
-        • <b>Presença de Rodovia Federal</b>: Se há passagens de rodovias federais (BR) no território.<br>
-        • <b>PIB Agropecuário por Habitante</b>: VAB Agropecuário dividido pela População.<br>
-        • <b>Estradas de Terra por Habitante</b>: Extensão de rodovias de terra dividida pela População.
-        """
+        <details style="cursor: pointer; margin-bottom: 10px;">
+            <summary style="font-weight: 600; color: #0072FF; outline: none;">ℹ️ Entenda o que significa cada variável do modelo</summary>
+            <div style="padding: 10px 0 0 15px; line-height: 1.6;">
+                • <b>População Total</b>: População residente estimada no município.<br>
+                • <b>Área Municipal</b>: Extensão territorial em quilômetros quadrados.<br>
+                • <b>Densidade Demográfica</b>: Habitantes por km² (calculado: População / Área).<br>
+                • <b>PIB per capita</b>: Produto Interno Bruto médio do município dividido pelos habitantes.<br>
+                • <b>VAB (Agropecuária, Indústria, Serviços)</b>: Valor Adicionado Bruto de cada setor de produção.<br>
+                • <b>Extensão de Rodovias (Total, Pavimentada, Terra)</b>: Perfil em km da malha rodoviária municipal.<br>
+                • <b>Presença de Rodovia Federal</b>: Se há passagens de rodovias federais (BR) no território.<br>
+                • <b>PIB Agropecuário por Habitante</b>: VAB Agropecuário dividido pela População.<br>
+                • <b>Estradas de Terra por Habitante</b>: Extensão de rodovias de terra dividida pela População.
+            </div>
+        </details>
+        """,
+        unsafe_allow_html=True
     )
     
     # Renderizar formulário HABILITADO (Permite edição)
@@ -797,9 +807,12 @@ elif pagina == "Simulador":
     st.write("")
     col_btn_1, col_btn_2, col_btn_3 = st.columns([1, 1.2, 1])
     with col_btn_2:
-        botao_predict = st.button("🚀 Executar Inferência Dinâmica", use_container_width=True, type="primary")
+        botao_predict = st.button("🚀 Executar Inferência Dinâmica", width="stretch", type="primary")
 
     if botao_predict:
+        st.session_state['simulado_iniciado'] = True
+
+    if st.session_state.get('simulado_iniciado', False):
         df_pred = pd.DataFrame([insumos])[FEATURES_ORDEM]
         df_pred_scaled = scaler.transform(df_pred)
         predicao = model.predict(df_pred_scaled)[0]
@@ -807,16 +820,8 @@ elif pagina == "Simulador":
         
         avg_nacional = df_muni['target_perc_diesel'].mean() if df_muni is not None else 11.5
         
-        # Guardar predição do simulador em sessão
-        st.session_state['pred_simulada'] = pred_final
-        st.session_state['insumos_simulados'] = insumos
-        
-    if 'pred_simulada' in st.session_state:
-        exibir_resultados(
-            st.session_state['pred_simulada'], 
-            df_muni['target_perc_diesel'].mean() if df_muni is not None else 11.5, 
-            st.session_state['insumos_simulados']
-        )
+        # Exibe os resultados sempre atualizados com as variáveis correntes do formulário
+        exibir_resultados(pred_final, avg_nacional, insumos)
 
 # Rodapé Técnico
 st.write("")
