@@ -7,7 +7,7 @@ Este documento apresenta o resumo geral do projeto desenvolvido ao longo do seme
 ## 📽️ Vídeo de Apresentação Final
 Assista à nossa apresentação final de no máximo 15 minutos, cobrindo o escopo do projeto, a metodologia, a demonstração prática da ferramenta no ar e nossas conclusões:
 
-👉 **[Link para o Vídeo de Apresentação (YouTube / Drive)](#)** *(Substitua este link com a URL do seu vídeo gravado)*
+👉 **[Link para o Vídeo de Apresentação (YouTube / Drive)](https://drive.google.com/file/d/13T2Qej219Dim6WFq3n4QQfFMoMgA-P5i/view)** *(Substitua este link com a URL do seu vídeo gravado)*
 
 ---
 
